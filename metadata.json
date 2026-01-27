@@ -1,0 +1,7 @@
+{
+  "name": "BeatSync - Music & Concert Ticketing",
+  "description": "A modern, emotion-driven music ticketing platform designed for Gen Z and Millennials, featuring neon aesthetics, seamless booking, and discovery tools.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BeatSync | Feel The Music</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+        background-color: #020617;
+        color: #f8fafc;
+        overflow-x: hidden;
+      }
+      .neon-text-purple {
+        text-shadow:
+          0 0 10px rgba(168, 85, 247, 0.5),
+          0 0 20px rgba(168, 85, 247, 0.3);
+      }
+      .neon-border-pink {
+        box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+      }
+      .glass-nav {
+        background: rgba(2, 6, 23, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+      @keyframes pulse-neon {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+      .animate-pulse-neon {
+        animation: pulse-neon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #020617;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "react/": "https://esm.sh/react@^19.2.3/",
+          "react": "https://esm.sh/react@^19.2.3",
+          "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="/index.css" />
+  </head>
+  <body>
+    <!-- phần comment dưới trước là dùng dialogflow google để tạo chatbot -->
+    <!-- <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+    <df-messenger
+      chat-title="buy_ticket"
+      agent-id="5f9a02e7-8609-4c33-9fbc-b4ebd9412259"
+      language-code="vi"
+    ></df-messenger>-->
+
+    <!-- Chatbot hỗ trợ mua vé concert -->
+    <div id="shop-chatbot">
+      <div id="chat-window" style="display: none">
+        <div class="chat-header">
+          <span class="pulse-icon"></span>
+          BeatSync Support
+        </div>
+        <div id="chat-body">
+          <div class="msg-bot">
+            Chào mừng bạn đến với BeatSync! Tôi có thể giúp gì cho bạn về vé
+            concert?
+          </div>
+        </div>
+        <div class="chat-footer">
+          <input
+            type="text"
+            id="chat-input"
+            placeholder="Nhập tin nhắn..."
+            onkeypress="if (event.key === 'Enter') askAI();"
+          />
+          <button onclick="askAI()">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <button id="chat-toggle" onclick="toggleWindow()">
+        <span class="icon-open">💬</span>
+      </button>
+    </div>
+
+    <style>
+      /* Css cho chatbot  */
+      #shop-chatbot {
+        position: fixed !important;
+        bottom: 30px !important;
+        right: 30px !important;
+        z-index: 999999 !important;
+        font-family: "Plus Jakarta Sans", sans-serif;
+      }
+
+      /* Nút mở Chatbot */
+      #chat-toggle {
+        width: 65px;
+        height: 65px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #a855f7, #ec4899);
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 28px;
+        box-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #chat-toggle:hover {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 0 30px rgba(236, 72, 153, 0.8);
+      }
+
+      /* Khung cửa sổ Chat */
+      #chat-window {
+        width: 350px;
+        height: 500px;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: slideUp 0.4s ease-out;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Tiêu đề Chat */
+      .chat-header {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 18px;
+        font-weight: 700;
+        font-size: 16px;
+        color: #f8fafc;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .pulse-icon {
+        width: 8px;
+        height: 8px;
+        background: #22c55e;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #22c55e;
+        display: inline-block;
+      }
+
+      /* Thân Chat */
+      #chat-body {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      /* Tin nhắn người dùng */
+      .msg-user {
+        align-self: flex-end;
+        background: linear-gradient(135deg, #a855f7, #7c3aed);
+        color: white;
+        padding: 10px 16px;
+        border-radius: 18px 18px 0 18px;
+        font-size: 14px;
+        max-width: 80%;
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+      }
+
+      /* Tin nhắn Bot */
+      .msg-bot {
+        align-self: flex-start;
+        background: rgba(255, 255, 255, 0.1);
+        color: #e2e8f0;
+        padding: 10px 16px;
+        border-radius: 18px 18px 18px 0;
+        font-size: 14px;
+        max-width: 80%;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      /* Khung nhập liệu */
+      .chat-footer {
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.2);
+        display: flex;
+        gap: 10px;
+      }
+
+      #chat-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px 15px;
+        border-radius: 12px;
+        color: white !important;
+        outline: none;
+        transition: border 0.3s;
+      }
+
+      #chat-input:focus {
+        border-color: #a855f7;
+      }
+
+      .chat-footer button {
+        background: #a855f7;
+        color: white;
+        border: none;
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.3s;
+      }
+
+      .chat-footer button:hover {
+        background: #ec4899;
+        transform: translateY(-2px);
+      }
+    </style>
+
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+  <script>
+    function toggleWindow() {
+      const win = document.getElementById("chat-window");
+      win.style.display = win.style.display === "none" ? "flex" : "none";
+    }
+
+    async function askAI() {
+      const input = document.getElementById("chat-input");
+      const body = document.getElementById("chat-body");
+      const text = input.value.trim();
+      if (!text) return;
+
+      // Hiển thị tin nhắn user
+      body.innerHTML += `<div class="msg-user">${text}</div>`;
+      input.value = "";
+      body.scrollTop = body.scrollHeight;
+
+      try {
+        // link ngrok để deploy server chatbot thử cho đội test
+        const res = await fetch(
+          "https://naval-continuingly-myriam.ngrok-free.dev/chat",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text }),
+          },
+        );
+        const data = await res.json();
+
+        // Hiển thị tin nhắn bot
+        body.innerHTML += `<div class="msg-bot">${data.reply}</div>`;
+        body.scrollTop = body.scrollHeight;
+      } catch (error) {
+        body.innerHTML += `<div class="msg-bot" style="color: #ef4444;">Lỗi: Vui lòng kiểm tra link Tunnel hoặc nhấn Continue ở tab server.</div>`;
+      }
+    }
+  </script>
+</html>
