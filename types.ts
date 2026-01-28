@@ -22,6 +22,7 @@ export interface UserTicket extends Omit<Event, 'status'> {
   qrCode: string;
   purchaseDate: string;
   status: TicketStatus;
+  quantity: number; // Thêm số lượng vé đã mua
 }
 
 export interface Artist {
@@ -71,3 +72,5 @@ export interface TicketTier {
   remaining: number;
   perks: string[];
 }
+
+export type PaymentStatus = 'idle' | 'loading' | 'success' | 'error';

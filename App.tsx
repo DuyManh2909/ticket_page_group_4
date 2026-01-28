@@ -10,12 +10,46 @@ import StoryPage from "./pages/StoryPage";
 import ArtistStoryPage from "./pages/ArtistStoryPage";
 import MoodPlaylistPage from "./pages/MoodPlaylistPage";
 import EditorialArticlePage from "./pages/EditorialArticlePage";
-import { Page, Event, Artist, DiscoveryTheme } from "./types";
-import { MOCK_EVENTS, MOCK_ARTISTS, MOCK_THEMES } from "./constants";
+import {
+  Page,
+  Event,
+  Artist,
+  DiscoveryTheme,
+  UserTicket,
+  TicketTier,
+  PaymentStatus,
+} from "./types";
+import {
+  MOCK_EVENTS,
+  MOCK_ARTISTS,
+  MOCK_THEMES,
+  MOCK_USER_TICKETS,
+  TICKET_TIERS,
+} from "./constants";
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>("home");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // STATE TẬP TRUNG
+  // 1. Quản lý danh sách vé của người dùng
+  const [userTickets, setUserTickets] = useState<UserTicket[]>(
+    MOCK_USER_TICKETS.map((t) => ({ ...t, quantity: 1 })),
+  );
+
+  // 2. Quản lý tồn kho vé thực tế cho từng sự kiện (Key là eventId)
+  // Trong thực tế, dữ liệu này sẽ lấy từ API
+  const [eventTiersMap, setEventTiersMap] = useState<
+    Record<string, TicketTier[]>
+  >(() => {
+    const initialMap: Record<string, TicketTier[]> = {};
+    MOCK_EVENTS.forEach((event) => {
+      initialMap[event.id] = JSON.parse(JSON.stringify(TICKET_TIERS)); // Deep copy hằng số mẫu
+    });
+    return initialMap;
+  });
+
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle");
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -87,12 +121,84 @@ const App: React.FC = () => {
     }
   };
 
+  /**
+   * XỬ LÝ MUA VÉ (GIẢ LẬP BACKEND)
+   * Trừ tồn kho và cập nhật danh sách vé người dùng
+   */
+  const handlePurchaseTicket = async (
+    event: Event,
+    tier: TicketTier,
+    quantity: number,
+  ) => {
+    setPaymentStatus("loading");
+
+    // Giả lập xử lý backend
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Kiểm tra lại tồn kho một lần nữa trước khi trừ (Race condition check)
+    const currentTiers = eventTiersMap[event.id];
+    const targetTier = currentTiers.find((t) => t.id === tier.id);
+
+    if (!targetTier || targetTier.remaining < quantity) {
+      setPaymentStatus("error");
+      throw new Error("Số lượng vé còn lại không đủ.");
+    }
+
+    // 1. Cập nhật số vé còn lại (Trừ tồn kho)
+    setEventTiersMap((prev) => {
+      const updatedTiers = prev[event.id].map((t) =>
+        t.id === tier.id ? { ...t, remaining: t.remaining - quantity } : t,
+      );
+      return { ...prev, [event.id]: updatedTiers };
+    });
+
+    // 2. Tạo thông tin vé mới
+    const randomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const ticketId = `BS-${randomId}-${tier.name.charAt(0)}`;
+    const qrCode = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TICKET:${ticketId}`;
+
+    const newTicket: UserTicket = {
+      id: event.id,
+      title: event.title,
+      artist: event.artist,
+      date: event.date,
+      location: event.location,
+      priceFrom: tier.price,
+      image: event.image,
+      category: event.category,
+      soldPercentage: event.soldPercentage,
+      ticketId: ticketId,
+      seat: `${tier.name} x ${quantity}`,
+      qrCode: qrCode,
+      purchaseDate: new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      }),
+      status: "Upcoming",
+      quantity: quantity, // Lưu số lượng vé đã mua
+    };
+
+    // 3. Cập nhật danh sách vé người dùng
+    setUserTickets((prev) => [newTicket, ...prev]);
+    setPaymentStatus("success");
+
+    // Chuyển về trang vé sau một chút để user kịp thấy success
+    setTimeout(() => {
+      setPaymentStatus("idle");
+      navigateTo("my-tickets");
+    }, 1500);
+  };
+
   const selectedEvent =
     MOCK_EVENTS.find((e) => e.id === selectedId) || MOCK_EVENTS[0];
   const selectedArtist =
     MOCK_ARTISTS.find((a) => a.id === selectedId) || MOCK_ARTISTS[0];
   const selectedTheme =
     MOCK_THEMES.find((t) => t.id === selectedId) || MOCK_THEMES[0];
+
+  // Lấy danh sách tier động cho sự kiện đang chọn
+  const activeEventTiers = eventTiersMap[selectedEvent.id] || TICKET_TIERS;
 
   const isImmersionPage = [
     "story",
@@ -187,7 +293,10 @@ const App: React.FC = () => {
         {currentPage === "event-detail" && (
           <EventDetail
             event={selectedEvent}
+            tiers={activeEventTiers}
+            paymentStatus={paymentStatus}
             onSelectArtist={(id) => navigateTo("artist-detail", id)}
+            onPurchase={handlePurchaseTicket}
           />
         )}
         {currentPage === "discovery" && (
@@ -211,7 +320,10 @@ const App: React.FC = () => {
           />
         )}
         {currentPage === "my-tickets" && (
-          <MyTickets onSelectEvent={(id) => navigateTo("event-detail", id)} />
+          <MyTickets
+            tickets={userTickets}
+            onSelectEvent={(id) => navigateTo("event-detail", id)}
+          />
         )}
         {currentPage === "my-artists" && (
           <MyArtists onSelectArtist={(id) => navigateTo("artist-detail", id)} />
@@ -306,7 +418,7 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-white/5 text-center text-slate-500 text-[10px] uppercase font-bold tracking-[0.3em]">
-            © 2026 BeatSync. For Music Lovers, By Nhom 4 - Duy Manh Captain.
+            © 2026 BeatSync. Group 4 - Duy Manh - Captain.
           </div>
         </footer>
       )}

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { MOCK_EVENTS } from "../constants";
-import { UserTicket } from "../types";
-import EventCard from "../components/EventCard";
+import { MOCK_EVENTS } from "./constants";
+import { UserTicket } from "./types";
+import EventCard from "./components/EventCard";
 
 interface MyTicketsProps {
   onSelectEvent: (id: string) => void;

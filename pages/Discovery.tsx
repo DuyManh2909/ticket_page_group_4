@@ -66,7 +66,7 @@ const Discovery: React.FC<DiscoveryProps> = ({
           className="group relative aspect-video rounded-[2.5rem] overflow-hidden cursor-pointer"
         >
           <img
-            src="https://phunugioi.com/wp-content/uploads/2021/09/hinh-anh-ve-am-nhac-long-lay.jpg?auto=format&fit=crop&q=80&w=1200?auto=format&fit=crop&q=80&w=1200"
+            src="https://phunugioi.com/wp-content/uploads/2021/09/hinh-anh-ve-am-nhac-long-lay.jpg?auto=format&fit=crop&q=80&w=1200"
             alt="Story"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
           />

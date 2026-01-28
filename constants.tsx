@@ -219,6 +219,8 @@ export const MOCK_USER_TICKETS: UserTicket[] = [
       "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BEATSYNC-TICKET-1",
     purchaseDate: "Nov 12, 2025", // UPDATED VALUE
     status: "Upcoming",
+    // Added missing quantity property
+    quantity: 1,
   },
   {
     ...MOCK_EVENTS[2],
@@ -228,6 +230,8 @@ export const MOCK_USER_TICKETS: UserTicket[] = [
       "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BEATSYNC-TICKET-2",
     purchaseDate: "Oct 05, 2025", // UPDATED VALUE
     status: "Pending",
+    // Added missing quantity property
+    quantity: 1,
   },
   {
     id: "99",
@@ -246,6 +250,8 @@ export const MOCK_USER_TICKETS: UserTicket[] = [
       "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=BEATSYNC-TICKET-OLD",
     purchaseDate: "Jun 10, 2025", // UPDATED VALUE
     status: "Attended",
+    // Added missing quantity property
+    quantity: 1,
   },
 ];
 
